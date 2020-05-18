@@ -63,7 +63,7 @@ pub fn get_target_db_url() -> String {
     let port:String = get_config_property(ConfigProperty::TargetDBPort, TARGET_DB_DEFAULT_PORT.to_owned());
     let user:String = get_config_property(ConfigProperty::TargetDBUser, TARGET_DB_DEFAULT_USER.to_owned());
     let pass:String = get_config_property(ConfigProperty::TargetDBPass, TARGET_DB_DEFAULT_PASS.to_owned());
-    format!("host={} port={} user={} password='{}'", host , port, user, pass)
+    format!("host='{}' port='{}' user='{}' password='{}'", host , port, user, pass)
 }
 
 fn environment_or_default<T> (key:&str, default_value: T) -> T where T: FromStr {
