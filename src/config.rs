@@ -14,8 +14,8 @@ pub const TARGET_DB_DEFAULT_PASS:&str = "";
 
 // OTHER DEFAULT CONFIG
 pub const DEFAULT_MAX_THREADS:i64 = 8;
-pub const DEFAULT_ROWS_TO_EXECUTE_INSERT:i64 = 100;
-pub const DEFAULT_MAX_ROWS_FOR_SELECT:i64 = 1000;
+pub const DEFAULT_ROWS_TO_EXECUTE_INSERT:i64 = 1000;
+pub const DEFAULT_MAX_ROWS_FOR_SELECT:i64 = 10000;
 pub const ERROR_LOG_ENABLED:bool = false;
 
 pub enum ConfigProperty {
