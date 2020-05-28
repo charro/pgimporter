@@ -38,7 +38,11 @@ pub fn get_available_tables_in_schema(schema:&str) -> Vec<String> {
 
     let mut tables:Vec<String> = vec!();  
     
-    for row in client.query("select table_name from information_schema.tables where table_schema = $1", &[&schema]).unwrap(){
+    for row in client.query("select distinct table_name
+                from information_schema.tables ist
+                join pg_class pgc on ist.table_name = pgc.relname 
+                where ist.table_schema = $1 and ist.table_type = 'BASE TABLE'
+                and pgc.relispartition = false", &[&schema]).unwrap(){
         let table_name:String = row.try_get(0).unwrap();
         tables.push(table_name);
     }
