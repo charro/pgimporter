@@ -50,7 +50,7 @@ pub fn get_available_tables_in_schema(schema:&str) -> Vec<String> {
     return tables;
 }
 
-pub fn import_table_from_env(schema:String, table:String, where_clause:String) {
+pub fn import_table_from_env(schema:String, table:String, where_clause:String, truncate:bool) {
     
     // Get DB properties from config
     let source_db_url:String = config::get_source_db_url();
@@ -102,7 +102,19 @@ pub fn import_table_from_env(schema:String, table:String, where_clause:String) {
     // Divide all rows to import by the number of threads to use
     let rows_per_thread = rows_to_import / max_threads;
 
+    // TRUNCATE target table if truncate is requested
+    if truncate {
+        println!("TRUNCATING table {}...", table);
+        let mut target_client = match Client::connect(target_db_url.as_ref(), NoTls) {
+            Ok(client) => client,
+            Err(error) => { println!("Couldn't connect to target DB. Error: {}", error);  std::process::exit(1); }
+        };
 
+        let truncate_query = format!("TRUNCATE TABLE {}", table);
+        target_client.execute(truncate_query.as_str(), &[]).unwrap();
+    }
+
+    // START IMPORTING
     let mut previous_thread_last_row = 0;
     // Remember that higher limit in for loop is exclusive in Rust so this is actually 0 to max_threads-1:
     for thread_num in 0..max_threads {

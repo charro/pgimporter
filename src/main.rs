@@ -12,7 +12,7 @@ mod db;
 mod utils;
 mod config;
 
-use dialoguer::{theme::ColorfulTheme, Checkboxes, Select, Input};
+use dialoguer::{theme::ColorfulTheme, MultiSelect, Select, Input, Confirm};
 use log::LevelFilter;
 use chrono::{Utc};
 use std::env;
@@ -68,14 +68,28 @@ fn main() {
     .interact()
     .unwrap();
 
+    let target_host_port = format!("{}:{}", 
+        config::get_config_property(config::ConfigProperty::TargetDBHost, config::TARGET_DB_DEFAULT_HOST.to_owned()),
+        config::get_config_property(config::ConfigProperty::ErrorLogEnabled, config::TARGET_DB_DEFAULT_PORT.to_owned())
+    );
+
+    let confirm_msg = format!("Do you want to TRUNCATE tables in target DB [{}] ? 
+    (WARNING, YOU'LL REMOVE ALL ROWS OF ALL SELECTED TABLES)", target_host_port);
+
+    let truncate = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(confirm_msg.to_owned())
+        .default(false)
+        .interact()
+        .unwrap();
+
     for table_index in selected_tables {
-        db::import_table_from_env(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned());
+        db::import_table_from_env(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned(), truncate);
     }
 }
 
 fn create_options_with<T:ToString>(options:&[T], defaults:&[bool], prompt:&str) -> Vec<usize> {
 
-    let selections_result = Checkboxes::with_theme(&ColorfulTheme::default())
+    let selections_result = MultiSelect::with_theme(&ColorfulTheme::default())
         .with_prompt(prompt)
         .items(&options[..])
         .defaults(&defaults[..])
