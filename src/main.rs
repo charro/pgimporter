@@ -73,8 +73,7 @@ fn main() {
         config::get_config_property(config::ConfigProperty::ErrorLogEnabled, config::TARGET_DB_DEFAULT_PORT.to_owned())
     );
 
-    let confirm_msg = format!("Do you want to TRUNCATE tables in target DB [{}] ? 
-    (WARNING, YOU'LL REMOVE ALL ROWS OF ALL SELECTED TABLES)", target_host_port);
+    let confirm_msg = format!("Do you want to TRUNCATE selected tables in target DB [{}] ? (WARNING: ALL DATA WILL BE LOST!)", target_host_port);
 
     let truncate = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt(confirm_msg.to_owned())
