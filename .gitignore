@@ -11,3 +11,4 @@ Cargo.lock
 
 # Config for IDEs 
 .idea/
+.vscode/

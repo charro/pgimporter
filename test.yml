@@ -1,0 +1,14 @@
+imports:
+    - schema: sdg
+      tables:
+        - one
+        - two
+        - three
+      where_clause:
+      truncate: false
+    - schema: other
+      tables:
+        - my_table
+        - other_table
+      where_clause: paco in (sally)
+      truncate: true

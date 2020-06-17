@@ -38,6 +38,7 @@ pub fn get_available_tables_in_schema(schema:&str) -> Vec<String> {
 
     let mut tables:Vec<String> = vec!();  
     
+    // Get all tables from the schema that aren't partitions
     for row in client.query("select distinct table_name
                 from information_schema.tables ist
                 join pg_class pgc on ist.table_name = pgc.relname 
@@ -50,7 +51,7 @@ pub fn get_available_tables_in_schema(schema:&str) -> Vec<String> {
     return tables;
 }
 
-pub fn import_table_from_env(schema:String, table:String, where_clause:String, truncate:bool) {
+pub fn import_table_from(schema:String, table:String, where_clause:String, truncate:bool) {
     
     // Get DB properties from config
     let source_db_url:String = config::get_source_db_url();
