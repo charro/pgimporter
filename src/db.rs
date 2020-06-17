@@ -73,7 +73,7 @@ pub fn import_table_from_env(schema:String, table:String, where_clause:String, t
         .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
         .progress_chars("##-");
 
-    // Start measuring total time for this table
+    // Start measuring total time spent importing this table
     let start = Instant::now();
 
     let mut count_db_client = match Client::connect(source_db_url.as_str(), NoTls) {
@@ -104,13 +104,13 @@ pub fn import_table_from_env(schema:String, table:String, where_clause:String, t
 
     // TRUNCATE target table if truncate is requested
     if truncate {
-        println!("TRUNCATING table {}...", table);
+        println!("TRUNCATING table {}.{}...", schema, table);
         let mut target_client = match Client::connect(target_db_url.as_ref(), NoTls) {
             Ok(client) => client,
             Err(error) => { println!("Couldn't connect to target DB. Error: {}", error);  std::process::exit(1); }
         };
 
-        let truncate_query = format!("TRUNCATE TABLE {}", table);
+        let truncate_query = format!("TRUNCATE TABLE {}.{}", schema, table);
         target_client.execute(truncate_query.as_str(), &[]).unwrap();
     }
 
