@@ -1,7 +1,0 @@
-imports:
-    - schema: public
-      tables:
-        - table1
-        - table2
-      where_clause:
-      truncate: false
