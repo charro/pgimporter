@@ -67,6 +67,7 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
     let source_db_url = std::sync::Arc::new(source_db_url);
     let target_db_url = std::sync::Arc::new(target_db_url);
 
+    println!();
     println!("Importing table {}.{} ...", schema, table);
     // Create the progression bars
     let m = MultiProgress::new();

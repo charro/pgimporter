@@ -1,14 +1,7 @@
 imports:
-    - schema: sdg
+    - schema: public
       tables:
-        - one
-        - two
-        - three
+        - table1
+        - table2
       where_clause:
       truncate: false
-    - schema: other
-      tables:
-        - my_table
-        - other_table
-      where_clause: paco in (sally)
-      truncate: true

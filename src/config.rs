@@ -51,18 +51,32 @@ pub fn get_config_property<T>(property : ConfigProperty, default_value: T) -> T 
 }
 
 pub fn get_source_db_url() -> String {
-    let host:String = get_config_property(ConfigProperty::SourceDBHost, SOURCE_DB_DEFAULT_HOST.to_owned());
-    let port:String = get_config_property(ConfigProperty::SourceDBPort, SOURCE_DB_DEFAULT_PORT.to_owned());
-    let user:String = get_config_property(ConfigProperty::SourceDBUser, SOURCE_DB_DEFAULT_USER.to_owned());
-    let pass:String = get_config_property(ConfigProperty::SourceDBPass, SOURCE_DB_DEFAULT_PASS.to_owned());
-    format!("host='{}' port='{}' user='{}' password='{}'", host , port, user, pass)
+    return get_source_db_url_with_hiding(false);
 }
 
 pub fn get_target_db_url() -> String {
+    return get_target_db_url_with_hiding(false);
+}
+
+pub fn get_source_db_url_with_hiding(hide_pass:bool) -> String {
+    let host:String = get_config_property(ConfigProperty::SourceDBHost, SOURCE_DB_DEFAULT_HOST.to_owned());
+    let port:String = get_config_property(ConfigProperty::SourceDBPort, SOURCE_DB_DEFAULT_PORT.to_owned());
+    let user:String = get_config_property(ConfigProperty::SourceDBUser, SOURCE_DB_DEFAULT_USER.to_owned());
+    let mut pass:String = get_config_property(ConfigProperty::SourceDBPass, SOURCE_DB_DEFAULT_PASS.to_owned());
+    if hide_pass {
+        pass = String::from("**HIDDEN**");
+    }
+    format!("host='{}' port='{}' user='{}' password='{}'", host , port, user, pass)
+}
+
+pub fn get_target_db_url_with_hiding(hide_pass:bool) -> String {
     let host:String = get_config_property(ConfigProperty::TargetDBHost, TARGET_DB_DEFAULT_HOST.to_owned());
     let port:String = get_config_property(ConfigProperty::TargetDBPort, TARGET_DB_DEFAULT_PORT.to_owned());
     let user:String = get_config_property(ConfigProperty::TargetDBUser, TARGET_DB_DEFAULT_USER.to_owned());
-    let pass:String = get_config_property(ConfigProperty::TargetDBPass, TARGET_DB_DEFAULT_PASS.to_owned());
+    let mut pass:String = get_config_property(ConfigProperty::TargetDBPass, TARGET_DB_DEFAULT_PASS.to_owned());
+    if hide_pass {
+        pass = String::from("**HIDDEN**");
+    }
     format!("host='{}' port='{}' user='{}' password='{}'", host , port, user, pass)
 }
 

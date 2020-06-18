@@ -13,7 +13,10 @@ fn main() {
     println!("Postgres Data Importer - v{}", env!("CARGO_PKG_VERSION"));
     println!();
 
-    batch::execute_batch_file(&"test.yml".to_owned());
+    if config::get_config_property(config::ConfigProperty::ErrorLogEnabled, config::ERROR_LOG_ENABLED) {
+        let error_log_filename = format!("pgimport_errors_{}.log", Utc::now().to_rfc3339());
+        simple_logging::log_to_file(error_log_filename, LevelFilter::Error).unwrap();    
+    }
 
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
@@ -26,12 +29,13 @@ fn main() {
           std::process::exit(0);
         }
     }
-
-    if config::get_config_property(config::ConfigProperty::ErrorLogEnabled, config::ERROR_LOG_ENABLED) {
-        let error_log_filename = format!("pgimport_errors_{}.log", Utc::now().to_rfc3339());
-        simple_logging::log_to_file(error_log_filename, LevelFilter::Error).unwrap();    
+    else{
+        execute_interactive();
     }
 
+}
+
+fn execute_interactive(){
     // Check if DB connection URLs are correct
     if !utils::check_postgres_source_target_servers() {
         std::process::exit(1);
@@ -108,9 +112,9 @@ fn create_options_with<T:ToString>(options:&[T], defaults:&[bool], prompt:&str) 
 fn show_help_and_end_program(){
     println!("   Imports data from one or more tables from a Source DB to a Target DB. (Chosen Schemas and Tables must exist in Target DB)");
     println!();
-    println!("By default, DB connection properties are:");
-    println!("Source DB: {}", config::get_source_db_url());
-    println!("Target DB: {}", config::get_target_db_url());
+    println!("Current DB connection parameters are:");
+    println!("Source DB: {}", config::get_source_db_url_with_hiding(true));
+    println!("Target DB: {}", config::get_target_db_url_with_hiding(true));
     println!();
     println!("To override these properties you can set following env vars before calling the importer:");
     println!("***************************************************************************************");

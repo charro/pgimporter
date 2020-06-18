@@ -34,7 +34,7 @@ pub fn execute_batch_file(batch_file: &String) {
                     
                     let batch:Batch = b;
                     for (i, schema_import) in batch.imports.iter().enumerate() {
-                        println!("Job {}: Importing schema {}...", i, schema_import.schema);
+                        println!("====== Job {} ======", i);
                         execute_schema_import(&schema_import.schema, &schema_import.tables, 
                             &schema_import.where_clause, schema_import.truncate);   
                     }
@@ -52,6 +52,7 @@ pub fn execute_batch_file(batch_file: &String) {
 
 fn execute_schema_import(schema:&String, tables:&Vec<String>, where_clause:&String, truncate:bool){
     let mut checked_where_clause = &String::from("");
+    // Where clause is optional. If empty, it's parsed as '~'
     if where_clause != "~" {
         checked_where_clause = where_clause;
     }
