@@ -1,16 +1,8 @@
-// External libs
-extern crate dialoguer;
-extern crate chrono;
-extern crate indicatif;
-extern crate resolve;
-extern crate rust_decimal;
-extern crate log;
-extern crate simple_logging;
-
 // This program's modules
 mod db;
 mod utils;
 mod config;
+mod batch;
 
 use dialoguer::{theme::ColorfulTheme, MultiSelect, Select, Input, Confirm};
 use log::LevelFilter;
@@ -21,18 +13,30 @@ fn main() {
     println!("Postgres Data Importer - v{}", env!("CARGO_PKG_VERSION"));
     println!();
 
-    let args: Vec<String> = env::args().collect();
-    if args.len() > 1 {
-        show_help_and_end_program();
-    }
-
     if config::get_config_property(config::ConfigProperty::ErrorLogEnabled, config::ERROR_LOG_ENABLED) {
         let error_log_filename = format!("pgimport_errors_{}.log", Utc::now().to_rfc3339());
         simple_logging::log_to_file(error_log_filename, LevelFilter::Error).unwrap();    
     }
 
-    println!("Checking DB connections...");
-    // Check if provided URL is correct
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 {
+        let first_arg = &args[1];
+        if first_arg == "--help" || first_arg == "-h" {
+            show_help_and_end_program();
+        }
+        else{
+          batch::execute_batch_file(first_arg);
+          std::process::exit(0);
+        }
+    }
+    else{
+        execute_interactive();
+    }
+
+}
+
+fn execute_interactive(){
+    // Check if DB connection URLs are correct
     if !utils::check_postgres_source_target_servers() {
         std::process::exit(1);
     }
@@ -82,7 +86,7 @@ fn main() {
         .unwrap();
 
     for table_index in selected_tables {
-        db::import_table_from_env(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned(), truncate);
+        db::import_table_from(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned(), truncate);
     }
 }
 
@@ -100,19 +104,17 @@ fn create_options_with<T:ToString>(options:&[T], defaults:&[bool], prompt:&str) 
         },
         Err(error) => {
             println!("Couldn't get your option: {}", error);
+            std::process::exit(1);
         }
     }
-
-    // Didn't get any option.
-    return vec!();
 }
 
 fn show_help_and_end_program(){
     println!("   Imports data from one or more tables from a Source DB to a Target DB. (Chosen Schemas and Tables must exist in Target DB)");
     println!();
-    println!("By default, DB connection properties are:");
-    println!("Source DB: {}", config::get_source_db_url());
-    println!("Target DB: {}", config::get_target_db_url());
+    println!("Current DB connection parameters are:");
+    println!("Source DB: {}", config::get_source_db_url_with_hiding(true));
+    println!("Target DB: {}", config::get_target_db_url_with_hiding(true));
     println!();
     println!("To override these properties you can set following env vars before calling the importer:");
     println!("***************************************************************************************");
