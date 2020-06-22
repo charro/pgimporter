@@ -80,12 +80,11 @@ Postgres Data Importer - v0.1.0
 Checking DB connections...
 Checking Postgres server localhost:5432...     OK
 Checking Postgres server localhost:5555...     OK
-Choose an Schema: public
-Choose tables to import:
-  [x] table2
-> [x] table1
+✔ Choose an Schema · public
+✔ Choose tables to import · table1, table2
+✔ WHERE: [Optional] · 
+✔ Do you want to TRUNCATE selected tables in target DB [localhost:5555] ? (WARNING: ALL DATA WILL BE LOST!) · yes
 
-WHERE: [Optional]: 
 Importing table public.table2 ...
 20000 rows to insert in total
 Finished importing 20000 rows from table public.table2 in 0 secs
