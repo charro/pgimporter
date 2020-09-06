@@ -33,6 +33,13 @@ pub enum ConfigProperty {
     ErrorLogEnabled
 }
 
+// TODO: Make this methods private and publish a map instead
+// Populate that map once the app is starting, using the following sources (in this order):
+// - If batch mode => Read config from batch file (if available. If existing, all parameters must be there)
+// - config_file.yml passed by argument (If existing, all params must be there)
+// - Environment vars
+// - Default values
+
 pub fn get_config_property<T>(property : ConfigProperty, default_value: T) -> T where T : FromStr {
     match property {
         ConfigProperty::SourceDBHost => environment_or_default(&"SOURCE_DB_HOST", default_value),

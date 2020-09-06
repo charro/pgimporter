@@ -3,11 +3,16 @@ mod db;
 mod utils;
 mod config;
 mod batch;
+mod query;
+mod copy;
 
 use dialoguer::{theme::ColorfulTheme, MultiSelect, Select, Input, Confirm};
 use log::LevelFilter;
 use chrono::{Utc};
 use std::env;
+use db::TableImporter;
+use query::QueryImporter;
+use copy::CopyImporter;
 
 fn main() {
     println!("Postgres Data Importer - v{}", env!("CARGO_PKG_VERSION"));
@@ -85,8 +90,11 @@ fn execute_interactive(){
         .interact()
         .unwrap();
 
+    // TODO: Select the TableImporter implementation depending on the user's choice in config
+    let importer = CopyImporter;
+
     for table_index in selected_tables {
-        db::import_table_from(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned(), truncate);
+        importer.import_table_from(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned(), truncate);
     }
 }
 
