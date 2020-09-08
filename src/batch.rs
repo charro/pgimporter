@@ -3,8 +3,7 @@ use serde_yaml::from_reader;
 use std::fs::File;
 use std::io::BufReader;
 
-use crate::db::TableImporter;
-use crate::query::QueryImporter;
+use crate::db;
 use crate::utils;
 
 #[derive(Serialize, Deserialize)]
@@ -58,10 +57,7 @@ fn execute_schema_import(schema:&String, tables:&Vec<String>, where_clause:&Stri
         checked_where_clause = where_clause;
     }
  
-    // Select the TableImporter implementation depending on the user's choice
-    let importer = QueryImporter;
-
     for table in tables {
-        importer.import_table_from(schema.to_owned(), table.to_owned(), checked_where_clause.to_owned(), truncate);
+        db::import_table_from(schema.to_owned(), table.to_owned(), checked_where_clause.to_owned(), truncate);
     }
 }

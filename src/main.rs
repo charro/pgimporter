@@ -10,9 +10,6 @@ use dialoguer::{theme::ColorfulTheme, MultiSelect, Select, Input, Confirm};
 use log::LevelFilter;
 use chrono::{Utc};
 use std::env;
-use db::TableImporter;
-use query::QueryImporter;
-use copy::CopyImporter;
 
 fn main() {
     println!("Postgres Data Importer - v{}", env!("CARGO_PKG_VERSION"));
@@ -90,11 +87,8 @@ fn execute_interactive(){
         .interact()
         .unwrap();
 
-    // TODO: Select the TableImporter implementation depending on the user's choice in config
-    let importer = CopyImporter;
-
     for table_index in selected_tables {
-        importer.import_table_from(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned(), truncate);
+        db::import_table_from(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned(), truncate);
     }
 }
 
@@ -138,5 +132,6 @@ fn show_help_and_end_program(){
     println!("ROWS_FOR_INSERT : How many rows will be inserted at once to target DB (Will affect the performance and memory consumed by process)");
     println!("ROWS_FOR_SELECT : How many rows to request at once from source DB (Will affect the performance and memory consumed by process)");
     println!("ERROR_LOG_ENABLED: If set to true, will log to a file all errors found during execution");
+    println!("IMPORTER_IMPL: Choose the implementation for the import [QUERY|COPY]. COPY is used by default");
     std::process::exit(1);  
 }
