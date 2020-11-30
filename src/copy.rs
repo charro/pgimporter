@@ -17,7 +17,7 @@ impl TableImporter for CopyImporter {
         reader.read_to_end(&mut buf).unwrap();
         
         // Create copy query to import data
-        let copy_in_query:String = format!("COPY {} FROM STDIN", import_config.table);
+        let copy_in_query:String = format!("COPY {}.{} FROM STDIN", import_config.schema, import_config.table);
         let mut writer = db_clients.target_client.copy_in(copy_in_query.as_str()).unwrap();
         writer.write_all(&buf).unwrap();
         writer.finish().unwrap();    
