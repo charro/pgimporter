@@ -3,6 +3,8 @@ mod db;
 mod utils;
 mod config;
 mod batch;
+mod query;
+mod copy;
 
 use dialoguer::{theme::ColorfulTheme, MultiSelect, Select, Input, Confirm};
 use log::LevelFilter;
@@ -130,5 +132,6 @@ fn show_help_and_end_program(){
     println!("ROWS_FOR_INSERT : How many rows will be inserted at once to target DB (Will affect the performance and memory consumed by process)");
     println!("ROWS_FOR_SELECT : How many rows to request at once from source DB (Will affect the performance and memory consumed by process)");
     println!("ERROR_LOG_ENABLED: If set to true, will log to a file all errors found during execution");
+    println!("IMPORTER_IMPL: Choose the implementation for the import [QUERY|COPY]. COPY is used by default");
     std::process::exit(1);  
 }

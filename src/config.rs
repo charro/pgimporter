@@ -17,6 +17,17 @@ pub const DEFAULT_MAX_THREADS:i64 = 8;
 pub const DEFAULT_ROWS_TO_EXECUTE_INSERT:i64 = 1000;
 pub const DEFAULT_MAX_ROWS_FOR_SELECT:i64 = 10000;
 pub const ERROR_LOG_ENABLED:bool = false;
+pub const DEFAULT_IMPORTER_IMPL:&str = "COPY";
+
+// Encapsulates all DB and config info needed for a worker thread to do an import
+pub struct ImportConfig {
+    pub schema:String,
+    pub table:String,
+    pub where_clause:String,
+    pub source_db_url:String,
+    pub target_db_url:String,    
+    pub importer_impl:String
+}
 
 pub enum ConfigProperty {
     SourceDBHost,
@@ -30,8 +41,16 @@ pub enum ConfigProperty {
     MaxThreads,
     RowsToExecuteInsert,
     MaxRowsForSelect,
-    ErrorLogEnabled
+    ErrorLogEnabled,
+    ImporterImplementation
 }
+
+// TODO: Make this methods private and publish a map instead
+// Populate that map once the app is starting, using the following sources (in this order):
+// - If batch mode => Read config from batch file (if available. If existing, all parameters must be there)
+// - config_file.yml passed by argument (If existing, all params must be there)
+// - Environment vars
+// - Default values
 
 pub fn get_config_property<T>(property : ConfigProperty, default_value: T) -> T where T : FromStr {
     match property {
@@ -46,7 +65,8 @@ pub fn get_config_property<T>(property : ConfigProperty, default_value: T) -> T 
         ConfigProperty::MaxThreads => environment_or_default(&"MAX_THREADS", default_value),
         ConfigProperty::RowsToExecuteInsert => environment_or_default(&"ROWS_FOR_INSERT", default_value),
         ConfigProperty::MaxRowsForSelect => environment_or_default(&"ROWS_FOR_SELECT", default_value),
-        ConfigProperty::ErrorLogEnabled => environment_or_default(&"ERROR_LOG", default_value)
+        ConfigProperty::ErrorLogEnabled => environment_or_default(&"ERROR_LOG", default_value),
+        ConfigProperty::ImporterImplementation => environment_or_default(&"IMPORTER_IMPL", default_value)
     }
 }
 

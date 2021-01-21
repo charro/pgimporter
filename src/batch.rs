@@ -56,7 +56,7 @@ fn execute_schema_import(schema:&String, tables:&Vec<String>, where_clause:&Stri
     if where_clause != "~" {
         checked_where_clause = where_clause;
     }
-    
+ 
     for table in tables {
         db::import_table_from(schema.to_owned(), table.to_owned(), checked_where_clause.to_owned(), truncate);
     }
