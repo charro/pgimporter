@@ -12,16 +12,16 @@ pub fn check_postgres_source_target_servers() -> bool {
     let target_host:String = get_config_property(ConfigProperty::TargetDBHost, TARGET_DB_DEFAULT_HOST.to_owned());
     let target_port:String = get_config_property(ConfigProperty::TargetDBPort, TARGET_DB_DEFAULT_PORT.to_owned());
 
-    check_postgres_server(source_host.as_str(), source_port.as_str()) && 
-    check_postgres_server(target_host.as_str(), target_port.as_str())
+    check_postgres_server("Source DB", source_host.as_str(), source_port.as_str()) && 
+    check_postgres_server("Target DB", target_host.as_str(), target_port.as_str())
 }
 
 pub fn log_error(err_msg:&str){
     error!("{}", err_msg);
 }
 
-fn check_postgres_server(host:&str, port:&str) -> bool {
-    print!("Checking Postgres server {}:{}...", host, port);
+fn check_postgres_server(msg:&str, host:&str, port:&str) -> bool {
+    print!("{}: Checking Postgres server {}:{}...", msg, host, port);
 
     // The provided host is an IP?
     if let Ok(ip) = host.parse::<IpAddr>() {

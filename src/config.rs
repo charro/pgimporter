@@ -4,11 +4,13 @@ use core::str::FromStr;
 // DEFAULT DB CONFIG
 pub const SOURCE_DB_DEFAULT_HOST:&str = "localhost";
 pub const SOURCE_DB_DEFAULT_PORT:&str = "5432";
+pub const SOURCE_DB_DEFAULT_DATABASE:&str = "postgres";
 pub const SOURCE_DB_DEFAULT_USER:&str = "postgres";
 pub const SOURCE_DB_DEFAULT_PASS:&str = "";
 
 pub const TARGET_DB_DEFAULT_HOST:&str = "localhost";
 pub const TARGET_DB_DEFAULT_PORT:&str = "5555";
+pub const TARGET_DB_DEFAULT_DATABASE:&str = "postgres";
 pub const TARGET_DB_DEFAULT_USER:&str = "postgres";
 pub const TARGET_DB_DEFAULT_PASS:&str = "";
 
@@ -34,10 +36,12 @@ pub enum ConfigProperty {
     SourceDBPort,
     SourceDBUser,
     SourceDBPass,
+    SourceDBDatabase,
     TargetDBHost,
     TargetDBPort,
     TargetDBUser,
     TargetDBPass,
+    TargetDBDatabase,
     MaxThreads,
     RowsToExecuteInsert,
     MaxRowsForSelect,
@@ -48,7 +52,7 @@ pub enum ConfigProperty {
 // TODO: Make this methods private and publish a map instead
 // Populate that map once the app is starting, using the following sources (in this order):
 // - If batch mode => Read config from batch file (if available. If existing, all parameters must be there)
-// - config_file.yml passed by argument (If existing, all params must be there)
+// - params from command line
 // - Environment vars
 // - Default values
 
@@ -58,10 +62,12 @@ pub fn get_config_property<T>(property : ConfigProperty, default_value: T) -> T 
         ConfigProperty::SourceDBPort => environment_or_default(&"SOURCE_DB_PORT", default_value),
         ConfigProperty::SourceDBUser => environment_or_default(&"SOURCE_DB_USER", default_value),
         ConfigProperty::SourceDBPass => environment_or_default(&"SOURCE_DB_PASS", default_value),
+        ConfigProperty::SourceDBDatabase => environment_or_default(&"SOURCE_DB_DATABASE", default_value),
         ConfigProperty::TargetDBHost => environment_or_default(&"TARGET_DB_HOST", default_value),
         ConfigProperty::TargetDBPort => environment_or_default(&"TARGET_DB_PORT", default_value),
         ConfigProperty::TargetDBUser => environment_or_default(&"TARGET_DB_USER", default_value),
         ConfigProperty::TargetDBPass => environment_or_default(&"TARGET_DB_PASS", default_value),
+        ConfigProperty::TargetDBDatabase => environment_or_default(&"TARGET_DB_DATABASE", default_value),
         ConfigProperty::MaxThreads => environment_or_default(&"MAX_THREADS", default_value),
         ConfigProperty::RowsToExecuteInsert => environment_or_default(&"ROWS_FOR_INSERT", default_value),
         ConfigProperty::MaxRowsForSelect => environment_or_default(&"ROWS_FOR_SELECT", default_value),
@@ -81,23 +87,25 @@ pub fn get_target_db_url() -> String {
 pub fn get_source_db_url_with_hiding(hide_pass:bool) -> String {
     let host:String = get_config_property(ConfigProperty::SourceDBHost, SOURCE_DB_DEFAULT_HOST.to_owned());
     let port:String = get_config_property(ConfigProperty::SourceDBPort, SOURCE_DB_DEFAULT_PORT.to_owned());
+    let database:String = get_config_property(ConfigProperty::SourceDBDatabase, SOURCE_DB_DEFAULT_DATABASE.to_owned());
     let user:String = get_config_property(ConfigProperty::SourceDBUser, SOURCE_DB_DEFAULT_USER.to_owned());
     let mut pass:String = get_config_property(ConfigProperty::SourceDBPass, SOURCE_DB_DEFAULT_PASS.to_owned());
     if hide_pass {
         pass = String::from("**HIDDEN**");
     }
-    format!("host='{}' port='{}' user='{}' password='{}'", host , port, user, pass)
+    format!("host='{}' port='{}' dbname='{}' user='{}' password='{}'", host , port, database, user, pass)
 }
 
 pub fn get_target_db_url_with_hiding(hide_pass:bool) -> String {
     let host:String = get_config_property(ConfigProperty::TargetDBHost, TARGET_DB_DEFAULT_HOST.to_owned());
     let port:String = get_config_property(ConfigProperty::TargetDBPort, TARGET_DB_DEFAULT_PORT.to_owned());
+    let database:String = get_config_property(ConfigProperty::TargetDBDatabase, TARGET_DB_DEFAULT_DATABASE.to_owned());
     let user:String = get_config_property(ConfigProperty::TargetDBUser, TARGET_DB_DEFAULT_USER.to_owned());
     let mut pass:String = get_config_property(ConfigProperty::TargetDBPass, TARGET_DB_DEFAULT_PASS.to_owned());
     if hide_pass {
         pass = String::from("**HIDDEN**");
     }
-    format!("host='{}' port='{}' user='{}' password='{}'", host , port, user, pass)
+    format!("host='{}' port='{}' dbname='{}' user='{}' password='{}'", host , port, database, user, pass)
 }
 
 fn environment_or_default<T> (key:&str, default_value: T) -> T where T: FromStr {

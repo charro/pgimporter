@@ -122,10 +122,12 @@ fn show_help_and_end_program(){
     println!("***************************************************************************************");
     println!("SOURCE_DB_HOST : The IP or host of the DB where the data will be fetched from");
     println!("SOURCE_DB_PORT : The port of the DB where the data will be fetched from");
+    println!("SOURCE_DB_DATABASE : The name of the database to look for the schemas to import from");
     println!("SOURCE_DB_USER : The username of the DB where the data will be fetched from");
     println!("SOURCE_DB_PASS : The password of the DB where the data will be fetched from");
     println!("TARGET_DB_HOST : The IP or host of the DB where the data will be inserted to");
     println!("TARGET_DB_PORT : The port  of the DB where the data will be inserted to");
+    println!("TARGET_DB_DATABASE : The name of the database to insert the data to");
     println!("TARGET_DB_USER : The username of the DB where the data will be inserted to");
     println!("TARGET_DB_PASS : The password of the DB where the data will be inserted to");
     println!("MAX_THREADS : Number of threads to be used (Will affect the performance)");
