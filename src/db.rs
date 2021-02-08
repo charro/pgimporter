@@ -69,10 +69,10 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
     // Get DB properties from config
     let source_db_url:String = config::get_source_db_url();
     let target_db_url:String = config::get_target_db_url();
-    let max_threads:i64 = config::get_config_property(ConfigProperty::MaxThreads, config::DEFAULT_MAX_THREADS);
-    let max_rows_for_select:i64 = config::get_config_property(ConfigProperty::MaxRowsForSelect, config::DEFAULT_MAX_ROWS_FOR_SELECT);
+    let max_threads:i64 = config::get_config_property(ConfigProperty::MaxThreads(config::DEFAULT_MAX_THREADS), config::DEFAULT_MAX_THREADS);
+    let max_rows_for_select:i64 = config::get_config_property(ConfigProperty::MaxRowsForSelect(config::DEFAULT_MAX_ROWS_FOR_SELECT), config::DEFAULT_MAX_ROWS_FOR_SELECT);
     let importer_impl:String = 
-        config::get_config_property(ConfigProperty::ImporterImplementation, config::DEFAULT_IMPORTER_IMPL.to_owned());
+        config::get_config_property(ConfigProperty::ImporterImplementation(config::DEFAULT_IMPORTER_IMPL.to_owned()), config::DEFAULT_IMPORTER_IMPL.to_owned());
 
     let import_config = ImportConfig { schema: schema, table: table, where_clause: where_clause, 
         source_db_url: source_db_url, target_db_url: target_db_url, importer_impl: importer_impl};

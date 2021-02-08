@@ -52,7 +52,7 @@ pub fn execute_batch_file(batch_file: &String) {
 
 fn execute_schema_import(schema:&String, tables:&Vec<String>, where_clause:&String, truncate:bool){
     let mut checked_where_clause = &String::from("");
-    // Where clause is optional. If empty, it's parsed as '~'
+    // Where clause is optional. If empty, it looks it's parsed as '~' for obscure reasons
     if where_clause != "~" {
         checked_where_clause = where_clause;
     }

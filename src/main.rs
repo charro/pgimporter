@@ -10,12 +10,21 @@ use dialoguer::{theme::ColorfulTheme, MultiSelect, Select, Input, Confirm};
 use log::LevelFilter;
 use chrono::{Utc};
 use std::env;
+use config::{CONFIG_MAP, ConfigKey};
 
 fn main() {
     println!("Postgres Data Importer - v{}", env!("CARGO_PKG_VERSION"));
     println!();
 
-    if config::get_config_property(config::ConfigProperty::ErrorLogEnabled, config::ERROR_LOG_ENABLED) {
+    let source_db_connection = CONFIG_MAP.get(&ConfigKey::SourceDBConnection);
+    let target_db_connection = CONFIG_MAP.get(&ConfigKey::TargetDBConnection);
+    let max_threads = CONFIG_MAP.get(&ConfigKey::MaxThreads);
+
+    println!("source DB from config: {:?}", source_db_connection);
+    println!("target DB from config: {:?}", target_db_connection);
+    println!("max threads DB from config: {:?}", max_threads);
+
+    if config::get_config_property(config::ConfigProperty::ErrorLogEnabled(config::ERROR_LOG_ENABLED_BY_DEFAULT), config::ERROR_LOG_ENABLED_BY_DEFAULT) {
         let error_log_filename = format!("pgimport_errors_{}.log", Utc::now().to_rfc3339());
         simple_logging::log_to_file(error_log_filename, LevelFilter::Error).unwrap();    
     }
@@ -75,8 +84,8 @@ fn execute_interactive(){
     .unwrap();
 
     let target_host_port = format!("{}:{}", 
-        config::get_config_property(config::ConfigProperty::TargetDBHost, config::TARGET_DB_DEFAULT_HOST.to_owned()),
-        config::get_config_property(config::ConfigProperty::ErrorLogEnabled, config::TARGET_DB_DEFAULT_PORT.to_owned())
+        config::get_config_property(config::ConfigProperty::TargetDBHost("".to_owned()), config::TARGET_DB_DEFAULT_HOST.to_owned()),
+        config::get_config_property(config::ConfigProperty::ErrorLogEnabled(false), config::TARGET_DB_DEFAULT_PORT.to_owned())
     );
 
     let confirm_msg = format!("Do you want to TRUNCATE selected tables in target DB [{}] ? (WARNING: ALL DATA WILL BE LOST!)", target_host_port);

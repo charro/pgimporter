@@ -16,7 +16,7 @@ impl TableImporter for QueryImporter {
 
     fn import_table_chunk(&self, import_config: &ImportConfig, db_clients:&mut DBClients, chunk: &TableChunk) {
         let min_rows_for_insert: i64 = 
-            config::get_config_property(ConfigProperty::RowsToExecuteInsert, config::DEFAULT_ROWS_TO_EXECUTE_INSERT);
+            config::get_config_property(ConfigProperty::RowsToExecuteInsert(config::DEFAULT_ROWS_TO_EXECUTE_INSERT), config::DEFAULT_ROWS_TO_EXECUTE_INSERT);
 
         let mut rows_read_in_this_thread = 0;
         let mut column_names: Vec<String> = vec![];

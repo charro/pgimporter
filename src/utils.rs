@@ -7,10 +7,10 @@ use crate::config::{ get_config_property, ConfigProperty, SOURCE_DB_DEFAULT_HOST
      SOURCE_DB_DEFAULT_PORT, TARGET_DB_DEFAULT_HOST, TARGET_DB_DEFAULT_PORT };
 
 pub fn check_postgres_source_target_servers() -> bool {
-    let source_host:String = get_config_property(ConfigProperty::SourceDBHost, SOURCE_DB_DEFAULT_HOST.to_owned());
-    let source_port:String = get_config_property(ConfigProperty::SourceDBPort, SOURCE_DB_DEFAULT_PORT.to_owned());
-    let target_host:String = get_config_property(ConfigProperty::TargetDBHost, TARGET_DB_DEFAULT_HOST.to_owned());
-    let target_port:String = get_config_property(ConfigProperty::TargetDBPort, TARGET_DB_DEFAULT_PORT.to_owned());
+    let source_host:String = get_config_property(ConfigProperty::SourceDBHost(SOURCE_DB_DEFAULT_HOST.to_owned()), SOURCE_DB_DEFAULT_HOST.to_owned());
+    let source_port:String = get_config_property(ConfigProperty::SourceDBPort(SOURCE_DB_DEFAULT_PORT.to_owned()), SOURCE_DB_DEFAULT_PORT.to_owned());
+    let target_host:String = get_config_property(ConfigProperty::TargetDBHost(TARGET_DB_DEFAULT_HOST.to_owned()), TARGET_DB_DEFAULT_HOST.to_owned());
+    let target_port:String = get_config_property(ConfigProperty::TargetDBPort(TARGET_DB_DEFAULT_PORT.to_owned()), TARGET_DB_DEFAULT_PORT.to_owned());
 
     check_postgres_server("Source DB", source_host.as_str(), source_port.as_str()) && 
     check_postgres_server("Target DB", target_host.as_str(), target_port.as_str())
