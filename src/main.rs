@@ -10,39 +10,24 @@ use dialoguer::{theme::ColorfulTheme, MultiSelect, Select, Input, Confirm};
 use log::LevelFilter;
 use chrono::{Utc};
 use std::env;
-use config::{CONFIG_MAP, ConfigKey};
+use config::{CONFIG_PROPERTIES};
 
 fn main() {
     println!("Postgres Data Importer - v{}", env!("CARGO_PKG_VERSION"));
     println!();
 
-    let source_db_connection = CONFIG_MAP.get(&ConfigKey::SourceDBConnection);
-    let target_db_connection = CONFIG_MAP.get(&ConfigKey::TargetDBConnection);
-    let max_threads = CONFIG_MAP.get(&ConfigKey::MaxThreads);
-
-    println!("source DB from config: {:?}", source_db_connection);
-    println!("target DB from config: {:?}", target_db_connection);
-    println!("max threads DB from config: {:?}", max_threads);
-
-    if config::get_config_property(config::ConfigProperty::ErrorLogEnabled(config::ERROR_LOG_ENABLED_BY_DEFAULT), config::ERROR_LOG_ENABLED_BY_DEFAULT) {
+    if CONFIG_PROPERTIES.error_log {
         let error_log_filename = format!("pgimport_errors_{}.log", Utc::now().to_rfc3339());
-        simple_logging::log_to_file(error_log_filename, LevelFilter::Error).unwrap();    
+        simple_logging::log_to_file(error_log_filename, LevelFilter::Error).unwrap();        
     }
 
-    let args: Vec<String> = env::args().collect();
-    if args.len() > 1 {
-        let first_arg = &args[1];
-        if first_arg == "--help" || first_arg == "-h" {
-            show_help_and_end_program();
-        }
-        else{
-          batch::execute_batch_file(first_arg);
-          std::process::exit(0);
-        }
-    }
-    else{
+    if CONFIG_PROPERTIES.batch_filename.is_empty() {
         execute_interactive();
     }
+    else {
+        batch::execute_batch_file(&CONFIG_PROPERTIES.batch_filename);
+        std::process::exit(0);
+    }        
 
 }
 
@@ -83,10 +68,9 @@ fn execute_interactive(){
     .interact()
     .unwrap();
 
-    let target_host_port = format!("{}:{}", 
-        config::get_config_property(config::ConfigProperty::TargetDBHost("".to_owned()), config::TARGET_DB_DEFAULT_HOST.to_owned()),
-        config::get_config_property(config::ConfigProperty::ErrorLogEnabled(false), config::TARGET_DB_DEFAULT_PORT.to_owned())
-    );
+    let target_db_connection = &CONFIG_PROPERTIES.target;
+
+    let target_host_port = format!("{}:{}", target_db_connection.host, target_db_connection.port);
 
     let confirm_msg = format!("Do you want to TRUNCATE selected tables in target DB [{}] ? (WARNING: ALL DATA WILL BE LOST!)", target_host_port);
 
@@ -120,6 +104,8 @@ fn create_options_with<T:ToString>(options:&[T], defaults:&[bool], prompt:&str) 
     }
 }
 
+// SHOW IT USING CLAP INSTEAD. REMOVE OLD PROPERTIES
+/*
 fn show_help_and_end_program(){
     println!("   Imports data from one or more tables from a Source DB to a Target DB. (Chosen Schemas and Tables must exist in Target DB)");
     println!();
@@ -146,3 +132,4 @@ fn show_help_and_end_program(){
     println!("IMPORTER_IMPL: Choose the implementation for the import [QUERY|COPY]. COPY is used by default");
     std::process::exit(1);  
 }
+*/
