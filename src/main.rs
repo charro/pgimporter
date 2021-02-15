@@ -13,7 +13,10 @@ use std::env;
 use config::{CONFIG_PROPERTIES};
 
 fn main() {
-    println!("Postgres Data Importer - v{}", env!("CARGO_PKG_VERSION"));
+    println!("PostgreSQL Data Importer - v{}", env!("CARGO_PKG_VERSION"));
+    println!();
+    println!("Exporting from Source DB: {}", config::get_source_db_url_with_hiding(true));
+    println!("Importing to Target DB: {}", config::get_target_db_url_with_hiding(true));
     println!();
 
     if CONFIG_PROPERTIES.error_log {
@@ -103,33 +106,3 @@ fn create_options_with<T:ToString>(options:&[T], defaults:&[bool], prompt:&str) 
         }
     }
 }
-
-// SHOW IT USING CLAP INSTEAD. REMOVE OLD PROPERTIES
-/*
-fn show_help_and_end_program(){
-    println!("   Imports data from one or more tables from a Source DB to a Target DB. (Chosen Schemas and Tables must exist in Target DB)");
-    println!();
-    println!("Current DB connection parameters are:");
-    println!("Source DB: {}", config::get_source_db_url_with_hiding(true));
-    println!("Target DB: {}", config::get_target_db_url_with_hiding(true));
-    println!();
-    println!("To override these properties you can set following env vars before calling the importer:");
-    println!("***************************************************************************************");
-    println!("SOURCE_DB_HOST : The IP or host of the DB where the data will be fetched from");
-    println!("SOURCE_DB_PORT : The port of the DB where the data will be fetched from");
-    println!("SOURCE_DB_DATABASE : The name of the database to look for the schemas to import from");
-    println!("SOURCE_DB_USER : The username of the DB where the data will be fetched from");
-    println!("SOURCE_DB_PASS : The password of the DB where the data will be fetched from");
-    println!("TARGET_DB_HOST : The IP or host of the DB where the data will be inserted to");
-    println!("TARGET_DB_PORT : The port  of the DB where the data will be inserted to");
-    println!("TARGET_DB_DATABASE : The name of the database to insert the data to");
-    println!("TARGET_DB_USER : The username of the DB where the data will be inserted to");
-    println!("TARGET_DB_PASS : The password of the DB where the data will be inserted to");
-    println!("MAX_THREADS : Number of threads to be used (Will affect the performance)");
-    println!("ROWS_FOR_INSERT : How many rows will be inserted at once to target DB (Will affect the performance and memory consumed by process)");
-    println!("ROWS_FOR_SELECT : How many rows to request at once from source DB (Will affect the performance and memory consumed by process)");
-    println!("ERROR_LOG_ENABLED: If set to true, will log to a file all errors found during execution");
-    println!("IMPORTER_IMPL: Choose the implementation for the import [QUERY|COPY]. COPY is used by default");
-    std::process::exit(1);  
-}
-*/

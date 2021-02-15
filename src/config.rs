@@ -4,20 +4,18 @@ use lazy_static::lazy_static;
 use regex::{Regex, Error};
 use std::env;
 
-// [user[:password]@][netloc][:port][/dbname]
-
 // DEFAULT DB CONFIG
 pub const SOURCE_DB_CONNECTION:&str = "postgres@localhost:5432/postgres";
 pub const TARGET_DB_CONNECTION:&str = "postgres@localhost:5555/postgres";
 
 // OTHER DEFAULT CONFIG VALUES
 pub const DEFAULT_MAX_THREADS:i64 = 8;
-pub const DEFAULT_ROWS_TO_EXECUTE_INSERT:i64 = 1000;
-pub const DEFAULT_MAX_ROWS_FOR_SELECT:i64 = 10000;
+pub const DEFAULT_ROWS_FOR_INSERT:i64 = 1000;
+pub const DEFAULT_ROWS_FOR_SELECT:i64 = 10000;
 pub const ERROR_LOG_ENABLED_BY_DEFAULT:bool = false;
 pub const DEFAULT_IMPORTER_IMPL:&str = "COPY";
 
-// Creates a singleton with all config values
+// Creates a global shared static singleton with all config values
 lazy_static! {
     pub static ref CONFIG_PROPERTIES: ConfigProperties = populate_properties();
 }
@@ -66,7 +64,7 @@ pub enum ConfigProperty {
     TargetDBConnection(ConnectionParams),
     MaxThreads(i64),
     RowsToExecuteInsert(i64),
-    MaxRowsForSelect(i64),
+    RowsToExecuteSelect(i64),
     ErrorLogEnabled(bool),
     ImporterImplementation(String),
     BatchFileName(String)
@@ -83,8 +81,12 @@ pub struct ConfigProperties {
     pub batch_filename: String
 }
 
-const ABOUT_MSG:&str = "";
-const AFTER_HELP_MSG:&str = "";
+const ABOUT_MSG:&str = "Command line tool to export data from a Postgres DB and insert it to another one";
+const AFTER_HELP_MSG:&str = 
+"You can use enviroment variables instead of passing the options by command line.
+The name of the env vars is the same as the options, but using Upper case and underscores
+
+  e.g.: --rows-insert 25 ==> ROWS_INSERT=25\n";
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
@@ -163,11 +165,11 @@ fn environment_or_default<T> (env_key:&str, default_value: T) -> T where T: From
 fn populate_properties() -> ConfigProperties {
 
     // Current properties
-    let source_connection = match get_most_prioritary_value(&"SOURCE_DB_CONNECTION") {
+    let source_connection = match get_most_prioritary_value(&"SOURCE") {
         ConfigProperty::SourceDBConnection(conn) => conn,
         _ => panic!("Wrong enum type") 
     };
-    let target_connection = match get_most_prioritary_value(&"TARGET_DB_CONNECTION") {
+    let target_connection = match get_most_prioritary_value(&"TARGET") {
         ConfigProperty::TargetDBConnection(conn) => conn,
         _ => panic!("Wrong enum type") 
     };
@@ -175,12 +177,12 @@ fn populate_properties() -> ConfigProperties {
         ConfigProperty::MaxThreads(t) => t,
         _ => panic!("Wrong enum type") 
     };
-    let rows_insert = match get_most_prioritary_value(&"ROWS_FOR_INSERT") {
+    let rows_insert = match get_most_prioritary_value(&"ROWS_INSERT") {
         ConfigProperty::RowsToExecuteInsert(r) => r,
         _ => panic!("Wrong enum type") 
     };
-    let rows_select = match get_most_prioritary_value(&"ROWS_FOR_SELECT") {
-        ConfigProperty::MaxRowsForSelect(r) => r,
+    let rows_select = match get_most_prioritary_value(&"ROWS_SELECT") {
+        ConfigProperty::RowsToExecuteSelect(r) => r,
         _ => panic!("Wrong enum type") 
     };
     let error_log = match get_most_prioritary_value(&"ERROR_LOG") {
@@ -209,13 +211,13 @@ fn get_most_prioritary_value(env_key:&str) -> ConfigProperty {
     let opts: Opts = Opts::parse();
 
     match env_key {
-        "SOURCE_DB_CONNECTION" => 
-            ConfigProperty::SourceDBConnection(parse_connection_params_from(&opts.source, "SOURCE_DB_CONNECTION", SOURCE_DB_CONNECTION.to_owned())),
-        "TARGET_DB_CONNECTION" => 
-            ConfigProperty::TargetDBConnection(parse_connection_params_from(&opts.target, "TARGET_DB_CONNECTION", TARGET_DB_CONNECTION.to_owned())),    
+        "SOURCE" => 
+            ConfigProperty::SourceDBConnection(parse_connection_params_from(&opts.source, "SOURCE", SOURCE_DB_CONNECTION.to_owned())),
+        "TARGET" => 
+            ConfigProperty::TargetDBConnection(parse_connection_params_from(&opts.target, "TARGET", TARGET_DB_CONNECTION.to_owned())),    
         "MAX_THREADS" => ConfigProperty::MaxThreads(get_value_from(opts.max_threads, "MAX_THREADS", DEFAULT_MAX_THREADS)),
-        "ROWS_FOR_INSERT" => ConfigProperty::RowsToExecuteInsert(get_value_from(opts.rows_insert, "ROWS_FOR_INSERT", DEFAULT_ROWS_TO_EXECUTE_INSERT)),
-        "ROWS_FOR_SELECT" => ConfigProperty::MaxRowsForSelect(get_value_from(opts.rows_select, "ROWS_FOR_SELECT", DEFAULT_MAX_ROWS_FOR_SELECT)),
+        "ROWS_INSERT" => ConfigProperty::RowsToExecuteInsert(get_value_from(opts.rows_insert, "ROWS_INSERT", DEFAULT_ROWS_FOR_INSERT)),
+        "ROWS_SELECT" => ConfigProperty::RowsToExecuteSelect(get_value_from(opts.rows_select, "ROWS_SELECT", DEFAULT_ROWS_FOR_SELECT)),
         "ERROR_LOG" =>  ConfigProperty::ErrorLogEnabled(get_value_from(opts.error_log, "ERROR_LOG", ERROR_LOG_ENABLED_BY_DEFAULT)),
         "IMPORTER_IMPL" =>  ConfigProperty::ImporterImplementation(get_value_from(opts.importer_impl, "IMPORTER_IMPL", DEFAULT_IMPORTER_IMPL.to_owned())),
         "BATCH_FILENAME" =>  ConfigProperty::BatchFileName(get_value_from(opts.batch_filename, "BATCH_FILENAME", "".to_owned())),
