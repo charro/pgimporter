@@ -1,15 +1,18 @@
 [package]
 name = "pgimporter"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Miguel Rivero <charrinton@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 chrono = "0.4.11"
+clap = "3.0.0-beta.2"
 dialoguer = "0.6.2"
 indicatif = "0.14.0"
+lazy_static = "1.4.0"
 log = "0.4.8"
 postgres = "0.17.5"
+regex = "1.4.3"
 resolve = "0.2.0"
 rust_decimal = { version = "1.4.1", features = ["postgres"] }
 serde = { version = "1.0", features = ["derive"] }
