@@ -10,8 +10,8 @@ pub const TARGET_DB_CONNECTION:&str = "postgres@localhost:5555/postgres";
 
 // OTHER DEFAULT CONFIG VALUES
 pub const DEFAULT_MAX_THREADS:i64 = 8;
-pub const DEFAULT_ROWS_FOR_INSERT:i64 = 1000;
-pub const DEFAULT_ROWS_FOR_SELECT:i64 = 10000;
+pub const DEFAULT_ROWS_FOR_INSERT:i64 = 10000;
+pub const DEFAULT_ROWS_FOR_SELECT:i64 = 50000;
 pub const ERROR_LOG_ENABLED_BY_DEFAULT:bool = false;
 pub const DEFAULT_IMPORTER_IMPL:&str = "COPY";
 
