@@ -4,4 +4,4 @@ imports:
         - table1
         - table2
       where_clause:
-      truncate: false
+      truncate: true
