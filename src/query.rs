@@ -23,10 +23,11 @@ impl TableImporter for QueryImporter {
 
         // Create the SELECT query for this iteration
         let select_query = format!(
-            "SELECT * FROM {}.{} {} OFFSET {} LIMIT {}",
+            "SELECT * FROM {}.{} {} ORDER BY {} OFFSET {} LIMIT {}",
             import_config.schema,
             import_config.table,
             chunk.where_clause,
+            chunk.order_by,
             chunk.offset,
             chunk.limit
         );

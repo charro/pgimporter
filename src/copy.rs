@@ -8,8 +8,8 @@ impl TableImporter for CopyImporter {
 
     fn import_table_chunk(&self, import_config:&ImportConfig, db_clients:&mut DBClients, chunk:&TableChunk) {
         // Create copy query to extract data
-        let select_query = format!("SELECT * FROM {}.{} {} OFFSET {} LIMIT {}",
-            import_config.schema, import_config.table, chunk.where_clause, chunk.offset, chunk.limit);
+        let select_query = format!("SELECT * FROM {}.{} {} ORDER BY {} OFFSET {} LIMIT {}",
+            import_config.schema, import_config.table, chunk.where_clause, chunk.order_by, chunk.offset, chunk.limit);
         let copy_out_query:String = format!("COPY ({}) TO STDOUT", select_query);
     
         let mut reader = db_clients.source_client.copy_out(copy_out_query.as_str()).unwrap();

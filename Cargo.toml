@@ -12,7 +12,7 @@ indicatif = "0.15.0"
 lazy_static = "1.4.0"
 log = "0.4.14"
 postgres = "0.19"
-regex = "1.4.3"
+regex = "1.5.3"
 resolve = "0.2.0"
 rust_decimal = { version = "1.10.3", features = ["db-postgres"] }
 serde = { version = "1.0", features = ["derive"] }
