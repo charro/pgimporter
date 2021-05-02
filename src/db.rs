@@ -1,5 +1,6 @@
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use postgres::{Client, NoTls};
+use regex::Regex;
 use std::time::{Instant};
 use std::thread;
 
@@ -17,7 +18,8 @@ pub struct DBClients {
 pub struct TableChunk {
     pub where_clause:String,
     pub offset:i64,
-    pub limit:i64
+    pub limit:i64,
+    pub order_by:String
 }
 
 pub trait TableImporter {
@@ -64,6 +66,38 @@ pub fn get_available_tables_in_schema(schema:&str) -> Vec<String> {
     return tables;
 }
 
+pub fn get_any_index_components_for_table(schema:&str, table:&str) -> Option<String> {
+    let mut client = match Client::connect(config::get_source_db_url().as_str(), NoTls) {
+        Ok(client) => client,
+        Err(error) => { println!("Couldn't connect to source DB. Error: {}", error);  std::process::exit(1); }
+    };
+
+    let indices = client.query("select indexdef from pg_indexes where schemaname = $1 and tablename = $2", &[&schema, &table]).unwrap();
+
+    if indices.len() == 0 {
+        return None;
+    }
+    else {
+        let first_index:String = indices[0].try_get(0).unwrap();
+        let regex = Regex::new(r"CREATE.*INDEX.*ON.*USING.*\(([^)]+)\)").unwrap();
+        let components = regex.captures(&first_index).unwrap().get(1).map_or("", |m| m.as_str());
+        return Some(components.to_owned());
+    }
+}
+
+pub fn get_first_column_from_table(schema:&str, table:&str) -> String {
+    let mut client = match Client::connect(config::get_source_db_url().as_str(), NoTls) {
+        Ok(client) => client,
+        Err(error) => { println!("Couldn't connect to source DB. Error: {}", error);  std::process::exit(1); }
+    };
+
+    let columns = client.query("SELECT column_name FROM information_schema.columns WHERE table_schema = $1 AND table_name   = $2;", &[&schema, &table]).unwrap();
+
+    let first_column:String = columns[0].try_get(0).unwrap();
+
+    return first_column;
+}
+
 // TODO: Pass here the connection params as a single struct
 pub fn import_table_from(schema:String, table:String, where_clause:String, truncate:bool) {
     // Get DB properties from config
@@ -76,7 +110,7 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
 
     let import_config = ImportConfig { schema: schema, table: table, where_clause: where_clause, 
         source_db_url: source_db_url, target_db_url: target_db_url, importer_impl: importer_impl.to_string()};
-
+   
     // Use smart pointers to share the same common Boxed values between all Threads (not needed for unboxed types)
     let import_config = std::sync::Arc::new(import_config);
 
@@ -191,11 +225,15 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
             if limit_for_this_thread > max_rows_for_select {
                 limit = max_rows_for_select;
             }
-            
+
+            // Get the order by, prioritizing any possible indexed column
+            let order_by = get_any_index_components_for_table(&import_config.schema, &import_config.table)
+                .unwrap_or(get_first_column_from_table(&import_config.schema, &import_config.table));
+
             // Iterate until finishing with all rows assigned to this thread
             while offset < max_offset {
   
-                let table_chunk = TableChunk { where_clause: complete_where.to_owned(), offset: offset, limit: limit};
+                let table_chunk = TableChunk { where_clause: complete_where.to_owned(), offset: offset, limit: limit, order_by: order_by.to_owned()};
 
                 if import_config.importer_impl == "QUERY" {
                     let importer = QueryImporter;                    
