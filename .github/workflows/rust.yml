@@ -54,12 +54,12 @@ jobs:
 
     steps:
       # Download source code and build debug version
-      - uses: actions/checkout@v2
-      - name: Build
-        run: cargo build --verbose
+     # - uses: actions/checkout@v2
+     # - name: Build
+     #   run: cargo build --verbose
 
-      - name: Connect to PostgreSQL from 
-        # Runs a script that creates a PostgreSQL client, populates
-        # the client with data, and retrieves data
-        run: ./target/debug/pgimporter -s postgres:postgres@localhost:5432/public -t postgres:postgres@localhost:5555/public
-        # Environment variable used by the `client.js` script to create a new PostgreSQL client
+      - name: Install PostgreSQL client
+        run: apt install postgresql-client
+
+      #- name: Import data from one DB to the other one
+        # run: ./target/debug/pgimporter -s postgres:postgres@localhost:5432/public -t postgres:postgres@localhost:5555/public
