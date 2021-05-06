@@ -61,7 +61,7 @@ jobs:
       - name: Update APT
         run: apt update
       - name: Install PostgreSQL client
-        run: apt install postgresql-client
+        run: apt install -y postgresql-client
 
       #- name: Import data from one DB to the other one
         # run: ./target/debug/pgimporter -s postgres:postgres@localhost:5432/public -t postgres:postgres@localhost:5555/public
