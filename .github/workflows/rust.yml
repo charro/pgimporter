@@ -10,13 +10,58 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  test-import:
+    # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: rust:latest
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres-source:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      # Label used to access the service container
+      postgres-target:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5555:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      # Download source code and build debug version
+     # - uses: actions/checkout@v2
+     # - name: Build
+     #   run: cargo build --verbose
+
+      - name: Update APT
+        run: apt update
+      - name: Install PostgreSQL client
+        run: apt install -y postgresql-client
+
+      #- name: Import data from one DB to the other one
+        # run: ./target/debug/pgimporter -s postgres:postgres@localhost:5432/public -t postgres:postgres@localhost:5555/public
