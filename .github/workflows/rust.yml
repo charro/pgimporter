@@ -54,14 +54,21 @@ jobs:
 
     steps:
       # Download source code and build debug version
-     # - uses: actions/checkout@v2
-     # - name: Build
-     #   run: cargo build --verbose
-
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --verbose
+      
       - name: Update APT
         run: apt update
+      
       - name: Install PostgreSQL client
         run: apt install -y postgresql-client
-
-      #- name: Import data from one DB to the other one
-        # run: ./target/debug/pgimporter -s postgres:postgres@localhost:5432/public -t postgres:postgres@localhost:5555/public
+      
+      - name: Insert Test data in Source DB
+        run: cd tests/; ./test.sh; cd ..
+      
+      - name: Import all data from source to target
+        run: ./target/debug/pgimporter -s postgres:postgres@localhost:5432/postgres -t postgres:postgres@localhost:5555/postgres --batch-filename=tests/test.yml
+      
+      - name: Check imported data with integration test
+        run: cargo test
