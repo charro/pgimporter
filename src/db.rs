@@ -1,7 +1,7 @@
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use postgres::{Client, NoTls};
-use regex::Regex;
 use std::time::{Instant};
+use std::sync::Arc;
 use std::thread;
 
 use crate::config;
@@ -66,22 +66,32 @@ pub fn get_available_tables_in_schema(schema:&str) -> Vec<String> {
     return tables;
 }
 
-pub fn get_any_index_components_for_table(schema:&str, table:&str) -> Option<String> {
+pub fn get_any_unique_constraint_fields_for_table(schema:&str, table:&str) -> Option<String> {
     let mut client = match Client::connect(config::get_source_db_url().as_str(), NoTls) {
         Ok(client) => client,
         Err(error) => { println!("Couldn't connect to source DB. Error: {}", error);  std::process::exit(1); }
     };
 
-    let indices = client.query("select indexdef from pg_indexes where schemaname = $1 and tablename = $2", &[&schema, &table]).unwrap();
+    let unique_constraints = client.query(
+        "select
+            string_agg(ccu.column_name, ', ') as constraint_columns
+        FROM
+            INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
+        JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE AS ccu ON ccu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+            and tc.constraint_schema  = ccu.constraint_schema and tc.constraint_catalog  = ccu.constraint_catalog 
+        where
+            tc.table_schema = $1 and 
+            tc.table_name  = $2 and
+            tc.constraint_type in ('PRIMARY KEY', 'UNIQUE')
+        group by tc.constraint_name, tc.constraint_type ", &[&schema, &table]).unwrap();
 
-    if indices.len() == 0 {
+    if unique_constraints.len() == 0 {
         return None;
     }
     else {
-        let first_index:String = indices[0].try_get(0).unwrap();
-        let regex = Regex::new(r"CREATE.*INDEX.*ON.*USING.*\(([^)]+)\)").unwrap();
-        let components = regex.captures(&first_index).unwrap().get(1).map_or("", |m| m.as_str());
-        return Some(components.to_owned());
+        // Just take the first one. All of them should be valid
+        let constraint_fields:String = unique_constraints[0].try_get(0).unwrap();
+        return Some(constraint_fields.to_owned());
     }
 }
 
@@ -91,7 +101,8 @@ pub fn get_first_column_from_table(schema:&str, table:&str) -> String {
         Err(error) => { println!("Couldn't connect to source DB. Error: {}", error);  std::process::exit(1); }
     };
 
-    let columns = client.query("SELECT column_name FROM information_schema.columns WHERE table_schema = $1 AND table_name   = $2;", &[&schema, &table]).unwrap();
+    let columns = client.query("SELECT column_name 
+        FROM information_schema.columns WHERE table_schema = $1 AND table_name   = $2;", &[&schema, &table]).unwrap();
 
     let first_column:String = columns[0].try_get(0).unwrap();
 
@@ -100,56 +111,19 @@ pub fn get_first_column_from_table(schema:&str, table:&str) -> String {
 
 // TODO: Pass here the connection params as a single struct
 pub fn import_table_from(schema:String, table:String, where_clause:String, truncate:bool) {
-    // Get DB properties from config
+    // Get some properties from config
     let source_db_url:String = config::get_source_db_url();
     let target_db_url:String = config::get_target_db_url();
-
-    let max_threads = CONFIG_PROPERTIES.max_threads;
-    let max_rows_for_select = CONFIG_PROPERTIES.rows_select;
     let importer_impl = &CONFIG_PROPERTIES.importer_impl;
 
     let import_config = ImportConfig { schema: schema, table: table, where_clause: where_clause, 
         source_db_url: source_db_url, target_db_url: target_db_url, importer_impl: importer_impl.to_string()};
-   
-    // Use smart pointers to share the same common Boxed values between all Threads (not needed for unboxed types)
-    let import_config = std::sync::Arc::new(import_config);
 
     println!();
     println!("Importing table {}.{} ...", import_config.schema, import_config.table);
-    // Create the progression bars
-    let multi_progress_bar = MultiProgress::new();
-    let sty = ProgressStyle::default_bar()
-        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
-        .progress_chars("##-");
 
     // Start measuring total time spent importing this table
     let start = Instant::now();
-
-    let mut count_db_client = match Client::connect(import_config.source_db_url.as_str(), NoTls) {
-        Ok(client) => client,
-        Err(error) => { println!("Couldn't connect to source DB. Error: {}", error);  std::process::exit(1); }
-    };
-    
-    // Count the rows to import
-    let mut count_query = format!("SELECT count(1) FROM {}.{}", import_config.schema, import_config.table);
-    if !import_config.where_clause.is_empty() {
-        count_query = format!("{} WHERE {}", count_query, import_config.where_clause)
-    }
-
-    let total_rows_to_import:i64 = match count_db_client.query(count_query.as_str(), &[]) {
-        Ok(count) => count[0].get(0),
-        Err(error) => { println!("Couldn't execute query: {} | Error: {} ", count_query, error); std::process::exit(1); }
-    };
-    
-    if total_rows_to_import <= 0{
-        println!("WARNING: No rows to import from query {}", count_query);
-        return;
-    }
-
-    println!("{} rows to insert in total", total_rows_to_import);
-
-    // Divide all rows to import by the number of threads to use
-    let rows_per_thread = total_rows_to_import / max_threads;
 
     // TRUNCATE target table if truncate is requested
     if truncate {
@@ -163,7 +137,41 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
         target_client.execute(truncate_query.as_str(), &[]).unwrap();
     }
 
+    let total_rows_to_import = count_total_rows_for_import(&import_config);
+
+    println!("{} rows to insert in total", total_rows_to_import);
+    
+    // Use smart pointers to share the same common Boxed values between all Threads (not needed for unboxed types)
+    let import_config = Arc::new(import_config);
+
+    // Check if there's 
+    //match get_any_unique_constraint_fields_for_table(&import_config.schema, &import_config.table) {
+
+    //}
+    let order_by = get_first_column_from_table(&import_config.schema, &import_config.table);
+
+    multi_thread_import(&import_config, &order_by, total_rows_to_import);
+
+    let duration = start.elapsed();
+    println!("Finished importing {} rows from table {}.{} in {} secs", total_rows_to_import, import_config.schema, 
+        import_config.table, duration.as_secs());
+}
+
+fn multi_thread_import(import_config:&Arc<ImportConfig>, order_by:&String, total_rows_to_import:i64) {
+
+    let max_threads = CONFIG_PROPERTIES.max_threads;
+    let max_rows_for_select = CONFIG_PROPERTIES.rows_select;
+
+    // Divide all rows to import by the number of threads to use
+    let rows_per_thread = total_rows_to_import / max_threads;
+
     // START IMPORTING, SPAWNING WORKER THREADS
+    // Create the progression bars
+    let multi_progress_bar = MultiProgress::new();
+    let sty = ProgressStyle::default_bar()
+        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
+        .progress_chars("##-");
+
     let mut previous_thread_last_row = 0;
     // Remember that higher limit in for loop is exclusive in Rust so this is actually 0 to max_threads-1:
     for thread_num in 0..max_threads {
@@ -194,6 +202,7 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
         // Clone the smart pointer so each thread has its own references to the DB values
         // Those references will be removed when the thread ends and when there are no references left the memory will be freed
         let import_config = import_config.clone();
+        let order_by = order_by.clone();
 
         // NEW WORKER THREAD BEGINS
         thread::spawn(move || {
@@ -226,9 +235,8 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
                 limit = max_rows_for_select;
             }
 
-            // Get the order by, prioritizing any possible indexed column
-            let order_by = get_any_index_components_for_table(&import_config.schema, &import_config.table)
-                .unwrap_or(get_first_column_from_table(&import_config.schema, &import_config.table));
+            // Show progress bar
+            progress_bar.inc(0 as u64);
 
             // Iterate until finishing with all rows assigned to this thread
             while offset < max_offset {
@@ -267,8 +275,33 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
 
     // Wait for all the progress bars to finish. Also acts as a join for the child threads
     multi_progress_bar.join_and_clear().unwrap();
+}
 
-    let duration = start.elapsed();
-    println!("Finished importing {} rows from table {}.{} in {} secs", total_rows_to_import, import_config.schema, 
-        import_config.table, duration.as_secs());
+fn single_thread_import(import_config:&ImportConfig) {
+
+}
+
+fn count_total_rows_for_import(import_config:&ImportConfig) -> i64 {
+    let mut count_db_client = match Client::connect(import_config.source_db_url.as_str(), NoTls) {
+        Ok(client) => client,
+        Err(error) => { println!("Couldn't connect to source DB. Error: {}", error);  std::process::exit(1); }
+    };
+    
+    // Count the rows to import
+    let mut count_query = format!("SELECT count(1) FROM {}.{}", import_config.schema, import_config.table);
+    if !import_config.where_clause.is_empty() {
+        count_query = format!("{} WHERE {}", count_query, import_config.where_clause)
+    }
+
+    let total_rows_to_import:i64 = match count_db_client.query(count_query.as_str(), &[]) {
+        Ok(count) => count[0].get(0),
+        Err(error) => { println!("Couldn't execute query: {} | Error: {} ", count_query, error); std::process::exit(1); }
+    };    
+
+    if total_rows_to_import <= 0{
+        println!("WARNING: No rows to import from query {}", count_query);
+        return 0;
+    }
+
+    total_rows_to_import
 }
