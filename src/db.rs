@@ -93,20 +93,6 @@ pub fn get_any_unique_constraint_fields_for_table(schema:&str, table:&str) -> Op
     }
 }
 
-pub fn get_first_column_from_table(schema:&str, table:&str) -> String {
-    let mut client = match Client::connect(config::get_source_db_url().as_str(), NoTls) {
-        Ok(client) => client,
-        Err(error) => { println!("Couldn't connect to source DB. Error: {}", error);  std::process::exit(1); }
-    };
-
-    let columns = client.query("SELECT column_name 
-        FROM information_schema.columns WHERE table_schema = $1 AND table_name   = $2;", &[&schema, &table]).unwrap();
-
-    let first_column:String = columns[0].try_get(0).unwrap();
-
-    return first_column;
-}
-
 // TODO: Pass here the connection params as a single struct
 pub fn import_table_from(schema:String, table:String, where_clause:String, truncate:bool) {
     // Get some properties from config
