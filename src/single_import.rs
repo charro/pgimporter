@@ -16,8 +16,14 @@ pub fn single_thread_import(import_config:&ImportConfig, total_rows_to_import:u6
         Err(error) => { println!("Couldn't connect to target DB. Error: {}", error);  std::process::exit(1); }
     };
 
+    // Create WHERE section of query (if present)
+    let mut complete_where:String = import_config.where_clause.to_owned().to_string();
+    if !import_config.where_clause.is_empty() {
+        complete_where = format!("WHERE {}", import_config.where_clause);
+    }
+
     // Create copy query to extract data
-    let select_query = format!("SELECT * FROM {}.{} {}", import_config.schema, import_config.table, import_config.where_clause);
+    let select_query = format!("SELECT * FROM {}.{} {}", import_config.schema, import_config.table, complete_where);
     let copy_out_query:String = format!("COPY ({}) TO STDOUT", select_query);
     
     let mut reader = source_client.copy_out(copy_out_query.as_str()).unwrap();

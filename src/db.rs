@@ -138,8 +138,8 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
         match get_any_unique_constraint_fields_for_table(&import_config.schema, &import_config.table) {
             Some(order_by) => multi_import::multi_thread_import(&import_config, &order_by, total_rows_to_import),
             None => {
-                println!("INFO: {}.{} doesn't have any UNIQUE constraint to order by. 
-                    Switching to SINGLE Thread import", &import_config.schema, &import_config.table);
+                println!("INFO: {}.{} doesn't have any UNIQUE constraint to order by. Switching to SINGLE Thread import", 
+                    &import_config.schema, &import_config.table);
                 single_import::single_thread_import(&import_config, total_rows_to_import as u64);
             }
         }
