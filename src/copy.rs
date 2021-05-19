@@ -20,7 +20,7 @@ impl TableImporter for CopyImporter {
         let copy_in_query:String = format!("COPY {}.{} FROM STDIN", import_config.schema, import_config.table);
         let mut writer = db_clients.target_client.copy_in(copy_in_query.as_str()).unwrap();
         writer.write_all(&buf).unwrap();
-        writer.finish().unwrap();    
+        writer.finish().unwrap();
     }
 
 }

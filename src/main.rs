@@ -5,6 +5,8 @@ mod config;
 mod batch;
 mod query;
 mod copy;
+mod single_import;
+mod multi_import;
 
 use dialoguer::{theme::ColorfulTheme, MultiSelect, Select, Input, Confirm};
 use log::LevelFilter;
