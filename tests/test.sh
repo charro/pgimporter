@@ -4,5 +4,5 @@ PGPASSWORD=postgres psql -h $2 -U postgres -f create.sql
 # Insert data
 for i in {1..1000}
 do
-   PGPASSWORD=postgres psql -h $POSTGRES_SOURCE -U postgres -f insert.sql -o /dev/null
+   PGPASSWORD=postgres psql -h $1 -U postgres -f insert.sql -o /dev/null
 done
