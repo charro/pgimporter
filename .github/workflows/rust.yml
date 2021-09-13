@@ -65,7 +65,7 @@ jobs:
         run: apt install -y postgresql-client
       
       - name: Insert Test data in Source DB
-        run: cd tests/; ./test.sh; cd ..
+        run: cd tests/; ./test.sh postgres-source postgres-target; cd ..
       
       - name: Import all data from source to target
         run: ./target/debug/pgimporter -s postgres:postgres@postgres-source:5432/postgres -t postgres:postgres@postgres-target:5555/postgres --batch-filename=tests/test.yml
