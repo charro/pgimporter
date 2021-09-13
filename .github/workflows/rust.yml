@@ -41,7 +41,7 @@ jobs:
         image: postgres
         ports:
           # Maps tcp port 5432 on service container to the host
-          - 5555:5432
+          - 5432:5432
         env:
           # Provide the password for postgres
           POSTGRES_PASSWORD: postgres
@@ -68,7 +68,7 @@ jobs:
         run: cd tests/; ./test.sh; cd ..
       
       - name: Import all data from source to target
-        run: ./target/debug/pgimporter -s postgres:postgres@localhost:5432/postgres -t postgres:postgres@localhost:5555/postgres --batch-filename=tests/test.yml
+        run: ./target/debug/pgimporter -s postgres:postgres@postgres-source:5432/postgres -t postgres:postgres@postgres-target:5555/postgres --batch-filename=tests/test.yml
       
-      #- name: Check imported data with integration test
-      #  run: cargo test
+      - name: Check imported data with integration test
+        run: cargo test
