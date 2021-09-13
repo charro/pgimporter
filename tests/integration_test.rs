@@ -1,7 +1,7 @@
 use postgres::{Client, NoTls};
 
-const SOURCE_URL: &str = "host='localhost' port='5432' dbname='postgres' user='postgres' password='postgres'";  
-const TARGET_URL: &str = "host='localhost' port='5555' dbname='postgres' user='postgres' password='postgres'";
+const SOURCE_URL: &str = "host='postgres-source' port='5432' dbname='postgres' user='postgres' password='postgres'";  
+const TARGET_URL: &str = "host='postgres-target' port='5432' dbname='postgres' user='postgres' password='postgres'";
 
 const QUERY: &str = "SELECT id, some_text, a_number FROM table1 ORDER BY id";
 
