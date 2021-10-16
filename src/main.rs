@@ -14,6 +14,17 @@ use chrono::{Utc};
 use std::env;
 use config::{CONFIG_PROPERTIES};
 
+struct TableInfo{
+    name: String,
+    rows: u64
+}
+
+impl ToString for TableInfo {
+    fn to_string(&self) -> String {
+        return format!("{} - {} rows", &self.name, &self.rows);
+    }
+}
+
 fn main() {
     println!("PostgreSQL Data Importer - v{}", env!("CARGO_PKG_VERSION"));
     println!();
@@ -60,7 +71,9 @@ fn execute_interactive(){
         std::process::exit(1);
     }
 
-    let selected_tables = create_options_with(&tables[..], &[], "Choose tables to import");
+    let table_info_list = get_tables_info(selected_schema.as_str(), tables);
+
+    let selected_tables = create_options_with(&table_info_list[..], &[], "Choose tables to import");
 
     if selected_tables.is_empty() {
         println!("You must select at least one table to import");
@@ -86,7 +99,7 @@ fn execute_interactive(){
         .unwrap();
 
     for table_index in selected_tables {
-        db::import_table_from(selected_schema.to_owned(), tables[table_index].to_owned(), where_clause.to_owned(), truncate);
+        db::import_table_from(selected_schema.to_owned(), table_info_list[table_index].name.to_owned(), where_clause.to_owned(), truncate);
     }
 }
 
@@ -107,4 +120,15 @@ fn create_options_with<T:ToString>(options:&[T], defaults:&[bool], prompt:&str) 
             std::process::exit(1);
         }
     }
+}
+
+fn get_tables_info(schema:&str, tables:Vec<String>) -> Vec<TableInfo> {
+    let mut table_info_list = Vec::new();
+
+    for table in tables {
+        let rows = db::get_number_of_rows_for(schema, table.as_str());
+        table_info_list.push(TableInfo{name: table, rows: rows});
+    }
+
+    return table_info_list;
 }

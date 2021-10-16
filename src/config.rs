@@ -5,8 +5,8 @@ use regex::{Regex, Error};
 use std::env;
 
 // DEFAULT DB CONFIG
-pub const SOURCE_DB_CONNECTION:&str = "postgres@localhost:5432/postgres";
-pub const TARGET_DB_CONNECTION:&str = "postgres@localhost:5555/postgres";
+pub const SOURCE_DB_CONNECTION:&str = "postgres:postgres@localhost:5432/postgres";
+pub const TARGET_DB_CONNECTION:&str = "postgres:postgres@localhost:5555/postgres";
 
 // OTHER DEFAULT CONFIG VALUES
 pub const DEFAULT_MAX_THREADS:i64 = 8;

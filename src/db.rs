@@ -20,6 +20,11 @@ pub struct TableChunk {
     pub order_by:String
 }
 
+pub struct TableInfo {
+    name: String,
+    rows: u64
+}
+
 pub trait TableImporter {
     fn import_table_chunk(&self, import_config:&ImportConfig, db_clients:&mut DBClients, chunk:&TableChunk);
 }
@@ -40,6 +45,23 @@ pub fn get_available_schemas() -> Vec<String> {
     }
     
     return schemas;
+}
+
+pub fn get_number_of_rows_for(schema:&str, table:&str) -> u64 {
+    let mut count_db_client = match Client::connect(config::get_source_db_url().as_str(), NoTls) {
+        Ok(client) => client,
+        Err(error) => { println!("Couldn't connect to DB. Error: {}", error);  std::process::exit(1); }
+    };
+    
+    // Count the rows
+    let count_query = format!("SELECT count(1) FROM {}.{}", schema, table);
+
+    let total_rows:i64 = match count_db_client.query(count_query.as_str(), &[]) {
+        Ok(count) => count[0].get(0),
+        Err(error) => { println!("Couldn't execute query: {} | Error: {} ", count_query, error); std::process::exit(1); }
+    };    
+
+    return total_rows as u64
 }
 
 pub fn get_available_tables_in_schema(schema:&str) -> Vec<String> {
