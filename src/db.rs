@@ -20,11 +20,6 @@ pub struct TableChunk {
     pub order_by:String
 }
 
-pub struct TableInfo {
-    name: String,
-    rows: u64
-}
-
 pub trait TableImporter {
     fn import_table_chunk(&self, import_config:&ImportConfig, db_clients:&mut DBClients, chunk:&TableChunk);
 }
