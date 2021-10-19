@@ -125,9 +125,11 @@ fn create_options_with<T:ToString>(options:&[T], defaults:&[bool], prompt:&str) 
 fn get_tables_info(schema:&str, tables:Vec<String>) -> Vec<TableInfo> {
     let mut table_info_list = Vec::new();
 
-    for table in tables {
-        let rows = db::get_number_of_rows_for(schema, table.as_str());
-        table_info_list.push(TableInfo{name: table, rows: rows});
+    let tables_references = tables.iter().map(|t| {t.as_str()}).collect();
+    let rows_per_table = db::get_number_of_rows_for_tables(schema, tables_references);
+
+    for (index, table) in tables.iter().enumerate() {
+        table_info_list.push(TableInfo{name: String::from(table), rows: rows_per_table[index]});
     }
 
     return table_info_list;

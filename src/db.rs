@@ -42,19 +42,30 @@ pub fn get_available_schemas() -> Vec<String> {
     return schemas;
 }
 
-pub fn get_number_of_rows_for(schema:&str, table:&str) -> u64 {
-    let mut count_db_client = match Client::connect(config::get_source_db_url().as_str(), NoTls) {
+pub fn get_number_of_rows_for_tables(schema:&str, tables:Vec<&str>) -> Vec<u64> {
+    let mut rows_per_table = Vec::new();
+
+    let mut client = match Client::connect(config::get_source_db_url().as_str(), NoTls) {
         Ok(client) => client,
         Err(error) => { println!("Couldn't connect to DB. Error: {}", error);  std::process::exit(1); }
     };
-    
+
+    for table in tables {
+        rows_per_table.push(get_number_of_rows_for(&mut client, schema, table));
+    }
+
+    return rows_per_table;
+}
+
+
+fn get_number_of_rows_for(client: &mut Client, schema:&str, table:&str) -> u64 {
     // Count the rows
     let count_query = format!("SELECT count(1) FROM {}.{}", schema, table);
 
-    let total_rows:i64 = match count_db_client.query(count_query.as_str(), &[]) {
+    let total_rows:i64 = match client.query(count_query.as_str(), &[]) {
         Ok(count) => count[0].get(0),
-        Err(error) => { println!("Couldn't execute query: {} | Error: {} ", count_query, error); std::process::exit(1); }
-    };    
+        Err(error) => { println!("Couldn't execute query: {} | Error: {} ", count_query, error); 0 }
+    };
 
     return total_rows as u64
 }
