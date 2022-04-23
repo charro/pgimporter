@@ -1,5 +1,5 @@
 use core::str::FromStr;
-use clap::Clap;
+use clap::Parser;
 use lazy_static::lazy_static;
 use regex::{Regex, Error};
 use std::env;
@@ -90,7 +90,7 @@ The name of the env vars is the same as the options, but using Upper case and un
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(version = env!("CARGO_PKG_VERSION"), author = "Miguel Rivero", about = ABOUT_MSG, after_help = AFTER_HELP_MSG)]
 struct Opts {
     /// Source DB URL:  user:secret@host:port/dbname
