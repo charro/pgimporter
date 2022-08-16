@@ -1,22 +1,22 @@
 [package]
 name = "pgimporter"
-version = "0.3.1"
+version = "0.4.1"
 authors = ["Miguel Rivero <charrinton@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-chrono = "0.4.11"
-clap = { version = "3.1.12", features = ["derive"] }
-dialoguer = "0.7.1"
+chrono = "0.4.22"
+clap = { version = "3.2.17", features = ["derive"] }
+dialoguer = "0.10.2"
 indicatif = "0.15.0"
 lazy_static = "1.4.0"
-log = "0.4.14"
-postgres = "0.19"
-regex = "1.5.3"
+log = "0.4.17"
+postgres = "0.19.3"
+regex = "1.5.5"
 resolve = "0.2.0"
-rust_decimal = { version = "1.10.3", features = ["db-postgres"] }
+rust_decimal = { version = "1.26.1", features = ["db-postgres"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.8"
+serde_yaml = "0.9.9"
 simple-logging = "2.0.2"
 
 [profile.release]
