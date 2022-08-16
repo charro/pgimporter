@@ -98,8 +98,21 @@ fn execute_interactive(){
         .interact()
         .unwrap();
 
+    let mut cascade = false;
+    if truncate {
+        cascade = Confirm::with_theme(&ColorfulTheme::default())
+            .with_prompt("TRUNCATE on CASCADE ?")
+            .default(false)
+            .interact()
+            .unwrap();
+    }
+
     for table_index in selected_tables {
-        db::import_table_from(selected_schema.to_owned(), table_info_list[table_index].name.to_owned(), where_clause.to_owned(), truncate);
+        db::import_table_from(selected_schema.to_owned(),
+                              table_info_list[table_index].name.to_owned(),
+                              where_clause.to_owned(),
+                              truncate,
+                              cascade);
     }
 }
 

@@ -11,7 +11,8 @@ struct SchemaImport {
     schema: String,
     tables: Vec<String>,
     where_clause: String,
-    truncate: bool
+    truncate: bool,
+    cascade: bool
 }
 
 #[derive(Serialize, Deserialize)]
@@ -36,7 +37,7 @@ pub fn execute_batch_file(batch_file: &String) {
                     for (i, schema_import) in batch.imports.iter().enumerate() {
                         println!("====== Job {} ======", i);
                         execute_schema_import(&schema_import.schema, &schema_import.tables, 
-                            &schema_import.where_clause, schema_import.truncate);   
+                            &schema_import.where_clause, schema_import.truncate, schema_import.cascade);
                     }
                 },
                 Err(err) => {
@@ -50,14 +51,16 @@ pub fn execute_batch_file(batch_file: &String) {
     }
 }
 
-fn execute_schema_import(schema:&String, tables:&Vec<String>, where_clause:&String, truncate:bool){
+fn execute_schema_import(schema:&String, tables:&Vec<String>, where_clause:&String, truncate:bool,
+    cascade: bool){
     let mut checked_where_clause = &String::from("");
     // Where clause is optional. If empty, it looks it's parsed as '~' for obscure reasons
     if where_clause != "~" {
         checked_where_clause = where_clause;
     }
- 
+
     for table in tables {
-        db::import_table_from(schema.to_owned(), table.to_owned(), checked_where_clause.to_owned(), truncate);
+        db::import_table_from(schema.to_owned(), table.to_owned(),
+                              checked_where_clause.to_owned(), truncate, cascade);
     }
 }

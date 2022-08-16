@@ -111,7 +111,7 @@ pub fn get_any_unique_constraint_fields_for_table(schema:&str, table:&str) -> Op
 }
 
 // TODO: Pass here the connection params as a single struct
-pub fn import_table_from(schema:String, table:String, where_clause:String, truncate:bool) {
+pub fn import_table_from(schema:String, table:String, where_clause:String, truncate:bool, cascade: bool) {
     // Get some properties from config
     let source_db_url:String = config::get_source_db_url();
     let target_db_url:String = config::get_target_db_url();
@@ -128,13 +128,18 @@ pub fn import_table_from(schema:String, table:String, where_clause:String, trunc
 
     // TRUNCATE target table if truncate is requested
     if truncate {
-        println!("TRUNCATING table {}.{}...", import_config.schema, import_config.table);
+        let mut cascade_str = "";
+        if cascade { cascade_str = "CASCADE" }
+        println!("TRUNCATING table {}.{}... {}", import_config.schema, import_config.table, cascade_str);
         let mut target_client = match Client::connect(import_config.target_db_url.as_ref(), NoTls) {
             Ok(client) => client,
             Err(error) => { println!("Couldn't connect to target DB. Error: {}", error);  std::process::exit(1); }
         };
 
-        let truncate_query = format!("TRUNCATE TABLE {}.{}", import_config.schema, import_config.table);
+        let mut truncate_query = format!("TRUNCATE TABLE {}.{}", import_config.schema, import_config.table);
+        if cascade {
+            truncate_query = format!("{} CASCADE", truncate_query);
+        }
         target_client.execute(truncate_query.as_str(), &[]).unwrap();
     }
 
