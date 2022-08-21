@@ -5,14 +5,15 @@ use std::io::BufReader;
 
 use crate::db;
 use crate::utils;
+use std::borrow::Borrow;
 
 #[derive(Serialize, Deserialize)]
 struct SchemaImport {
     schema: String,
     tables: Vec<String>,
-    where_clause: String,
-    truncate: bool,
-    cascade: bool
+    where_clause: Option<String>,
+    truncate: Option<bool>,
+    cascade: Option<bool>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -37,7 +38,10 @@ pub fn execute_batch_file(batch_file: &String) {
                     for (i, schema_import) in batch.imports.iter().enumerate() {
                         println!("====== Job {} ======", i);
                         execute_schema_import(&schema_import.schema, &schema_import.tables, 
-                            &schema_import.where_clause, schema_import.truncate, schema_import.cascade);
+                                              schema_import.where_clause
+                                                  .as_ref().unwrap_or(String::from("").borrow()),
+                                              schema_import.truncate.unwrap_or(false),
+                                              schema_import.cascade.unwrap_or(false));
                     }
                 },
                 Err(err) => {
