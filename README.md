@@ -140,8 +140,6 @@ imports:
       tables:
         - table1
         - table2
-      where_clause:
-      truncate: false
 ```
 
 We could instead split the work in two jobs if we wanted for instance to treat each table in a different way:
@@ -151,14 +149,13 @@ imports:
     - schema: public
       tables:
         - table1
-      where_clause:
-      truncate: false
       
     - schema: public
       tables:
         - table2
       where_clause:  some_text  = 'MY TEXT'
       truncate: true
+      cascade: true
 ```
 
 And then run (using default local DBs as in previous examples)
