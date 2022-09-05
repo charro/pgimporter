@@ -47,13 +47,13 @@ pub fn get_number_of_rows_for(schema:&str, table:&str) -> u64 {
         Ok(client) => client,
         Err(error) => { println!("Couldn't connect to DB. Error: {}", error);  std::process::exit(1); }
     };
-    
-    // Count the rows
-    let count_query = format!("SELECT count(1) FROM {}.{}", schema, table);
 
-    let total_rows:i64 = match count_db_client.query(count_query.as_str(), &[]) {
+    // Estimate the rows
+    let estimate_query = format!("SELECT reltuples::bigint AS estimate FROM pg_class WHERE  oid = '{}.{}'::regclass;", schema, table);
+
+    let total_rows:i64 = match count_db_client.query(estimate_query.as_str(), &[]) {
         Ok(count) => count[0].get(0),
-        Err(error) => { println!("Couldn't execute query: {} | Error: {} ", count_query, error); std::process::exit(1); }
+        Err(error) => { println!("Couldn't execute query: {} | Error: {} ", estimate_query, error); std::process::exit(1); }
     };    
 
     return total_rows as u64
